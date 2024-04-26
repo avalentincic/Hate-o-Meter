@@ -2,11 +2,11 @@ from __future__ import division, print_function
 from gensim import models
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Dense, Dropout, Reshape, Flatten, concatenate, Input, Conv1D, GlobalMaxPooling1D, Embedding
-from keras.layers.recurrent import LSTM
-from keras.models import Sequential
+# from keras.layers.recurrent import LSTM
+# from keras.models import Sequential
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-from keras.models import Model
+# from keras.models import Model
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
@@ -14,20 +14,20 @@ from flask import Flask,render_template,url_for,request
 import os
 
 import sys
-from keras.models import load_model
 from flask import Flask, request
-from keras.models import load_model
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import load_model
 import pickle
 from newspaper import Article 
 from flask import Flask, render_template, Response
 from spacy.lang.en import English
  
 nlp = English()
-nlp.add_pipe(nlp.create_pipe('sentencizer'))	
+nlp.add_pipe('sentencizer')	
 
 
 
-with open('tokenizer7.pickle', 'rb') as handle:
+with open('tokenizer4.pickle', 'rb') as handle:
 	tokenizer= pickle.load(handle)
 
 app = Flask(__name__)
