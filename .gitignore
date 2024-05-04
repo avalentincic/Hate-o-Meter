@@ -1,0 +1,5 @@
+archive.zip
+word2vec/
+*.keras
+*.h5
+__pycache__/
