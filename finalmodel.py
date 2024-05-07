@@ -15,7 +15,9 @@ import string
 import itertools
 import keras.backend as K
 from keras.layers import LeakyReLU
+from gensim import models
 
+from metrics import get_f1, precision, recall
 
 
 # LOADING DATA
@@ -83,7 +85,7 @@ TEST_VOCAB = sorted(list(set(all_test_words)))
 
  
 #LOADING WORD2VEC MODEL
-word2vec_path = 'C:\MyDrive\Projects\EDD3PROJECT\sem4\GoogleNews-vectors-negative300.bin'
+word2vec_path = "./word2vec/GoogleNews-vectors-negative300.bin"
 word2vec = models.KeyedVectors.load_word2vec_format(word2vec_path, binary=True)
 
 
@@ -127,28 +129,6 @@ print(train_embedding_weights.shape)
 
 test_sequences = tokenizer.texts_to_sequences(data_test["Text_Final"].tolist())
 test_cnn_data = pad_sequences(test_sequences, maxlen=MAX_SEQUENCE_LENGTH)
-
-
-#DEFINING METRICS 
-def precision(y_true, y_pred): 
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return precision
-def recall(y_true, y_pred): 
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
-
-def get_f1(y_true, y_pred): 
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    recall = true_positives / (possible_positives + K.epsilon())
-    f1_val = 2*(precision*recall)/(precision+recall+K.epsilon())
-    return f1_val
 
 
 
@@ -215,7 +195,7 @@ print(sum(data_test.Label==prediction_labels)/len(prediction_labels))
 #SAVING MODEL
 with open('tokenizer5.pickle', 'wb') as handle:
     pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
-model.save('cnnmodel5.h5')
+model.save('cnnmodel5.keras')
 
 
 

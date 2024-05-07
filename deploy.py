@@ -2,7 +2,6 @@ from __future__ import division, print_function
 from gensim import models
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Dense, Dropout, Reshape, Flatten, concatenate, Input, Conv1D, GlobalMaxPooling1D, Embedding
-from keras.layers.recurrent import LSTM
 from keras.models import Sequential
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
@@ -13,21 +12,23 @@ import pandas as pd
 from flask import Flask,render_template,url_for,request
 import os
 
+from keras.utils import custom_object_scope
+import metrics
+
 import sys
 from keras.models import load_model
 from flask import Flask, request
-from keras.models import load_model
 import pickle
 from newspaper import Article 
 from flask import Flask, render_template, Response
 from spacy.lang.en import English
  
 nlp = English()
-nlp.add_pipe(nlp.create_pipe('sentencizer'))	
+nlp.add_pipe('sentencizer')
 
 
 
-with open('tokenizer7.pickle', 'rb') as handle:
+with open('tokenizer5.pickle', 'rb') as handle:
 	tokenizer= pickle.load(handle)
 
 app = Flask(__name__)
@@ -51,12 +52,18 @@ def process():
 
 	df=0
 	global model
-	model = load_model('cnnmodel7.h5')
+	
+	custom_objects = {
+        "get_f1": metrics.get_f1,
+        "precision": metrics.precision,
+        "recall": metrics.recall,
+    }
 
+    # Load model with custom objects
+	with custom_object_scope(custom_objects):
+		model = load_model("cnnmodel5.keras")
 
-
-
-	print(request.method)
+	print("request.method:", request.method)
 	
 
 	if request.method == 'POST':
@@ -68,13 +75,12 @@ def process():
 			rawtext=rawtext.strip()
 			rawtext1=rawtext
 			doc = nlp(rawtext)
-			rawtext = [sent.string.strip() for sent in doc.sents]
+			rawtext = [sent.text.strip() for sent in doc.sents]
 			a_list = rawtext
 			df=pd.DataFrame(a_list)
 		if(choice=='url'):	
 			url = request.form['urltext']
-			print(url)
-			print('hello')
+			print("url: ", url)
 			url=url.strip()
 			toi_article = Article(url, language="en") # en for English 
 			toi_article.download()  
@@ -83,21 +89,21 @@ def process():
 			rawtext=rawtext.strip()
 			rawtext1=rawtext
 			doc = nlp(rawtext)
-			rawtext = [sent.string.strip() for sent in doc.sents]
+			rawtext = [sent.text.strip() for sent in doc.sents]
 			a_list = rawtext	
 			
 			df=pd.DataFrame(a_list)
 		token_select = [token.text.lower() for token in doc]
 	
 		df.columns=['sent']
-		print(df['sent'])
+		print("df['sent']: ", df['sent'])
 		tokenizer.fit_on_texts(df['sent'].tolist())
 		test_sequences1 = tokenizer.texts_to_sequences(df['sent'].tolist())
 # print(test_sequences1)
 		test_cnn_data1 = pad_sequences(test_sequences1, maxlen=50,dtype='float32')
 # print(test_cnn_data1)
 		predictions = model.predict(test_cnn_data1, batch_size=20, verbose=1)
-		print(predictions)
+		print("predictions: ", predictions)
 		labels = [1, 0]
 		prediction_labels=[]
 		ones=0
@@ -105,12 +111,14 @@ def process():
 		for p in predictions:
 			prediction_labels.append(labels[np.argmax(p)])
 			count=count+1
+			print("p: ", p)
+			print("np.argmax(p): ", np.argmax(p))
 			if(labels[np.argmax(p)]==1):
 				ones=ones+1
-		print(prediction_labels) #labels all sentences either 1 or 0
-		print((ones/count)*100,count,ones)
+		print("prediction_labels: ", prediction_labels) #labels all sentences either 1 or 0
+		print("(ones/count)*100,count,ones: ", (ones/count)*100,count,ones)
 		words = [token.text.lower() for token in doc]
-		print (words)
+		print("words: ", words)
 		
 
 # religion gender ethnicity disability
@@ -130,9 +138,9 @@ def process():
     			elif token in dlist:
         			d=d+1
 
-		print(r,g,e,d) #gives how many of each category are targetted , to make histogram
+		print("r,g,e,d: ", r,g,e,d) #gives how many of each category are targetted , to make histogram
 		dict={r:"r",g:"g",e:"e",d:"d"}
-		print(dict.get(max(dict))) #gives which category is targetted
+		print("dict.get(max(dict)): ", dict.get(max(dict))) #gives which category is targetted
 		cat=dict.get(max(dict))
 		percentage=(ones/count)*100
 	
